@@ -15,7 +15,7 @@ def send_telegram_notification(telegram_token, chat_id, message):
         f"https://api.telegram.org/bot{telegram_token}/sendMessage",
         json={
             'chat_id': chat_id,
-            'text': f" {message}",
+            'text': message,
             'parse_mode': 'Markdown'
         },
         timeout=5
@@ -43,6 +43,9 @@ def main():
         return
 
     last_timestamp = None
+    read_timeout_logged = False
+    last_log_time = 0
+    log_interval = 10
 
     while True:
         try:
@@ -76,7 +79,12 @@ def main():
                 last_timestamp = review_data['timestamp_to_request']
 
         except requests.exceptions.ReadTimeout:
-            logger.warning("Ошибка по времени запроса - повтор")
+            current_time = time.time()
+            if not read_timeout_logged or (current_time - last_log_time) >= log_interval:
+                logger.warning("Ошибка по времени запроса - повтор")
+                last_log_time = current_time
+                read_timeout_logged = True
+            
             time.sleep(10)
 
         except requests.exceptions.ConnectionError:
@@ -92,7 +100,7 @@ def main():
             logger.critical(error_msg)
             send_telegram_notification(error_msg)
 
-        raise
+            break
 
 
 if __name__ == '__main__':
