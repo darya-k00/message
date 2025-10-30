@@ -79,13 +79,8 @@ def main():
                 last_timestamp = review_data['timestamp_to_request']
 
         except requests.exceptions.ReadTimeout:
-            current_time = time.time()
-            if not read_timeout_logged or (current_time - last_log_time) >= log_interval:
-                logger.warning("Ошибка по времени запроса - повтор")
-                last_log_time = current_time
-                read_timeout_logged = True
-            
-            time.sleep(10)
+
+            continue
 
         except requests.exceptions.ConnectionError:
             error_msg = "Ошибка подключения к интернету"
@@ -98,9 +93,7 @@ def main():
             error_msg = f"ошибка:\n```\n{error_traceback}\n```"
 
             logger.critical(error_msg)
-            send_telegram_notification(error_msg)
 
-            break
 
 
 if __name__ == '__main__':
